@@ -220,3 +220,89 @@ VALUES (1,'2008-04-28',16000,64,'Reparacion del Display',1,30535667590),
 
 -- Muestra para ejercicio J. Pero al agregarlo no realiza cambios el ejercicio 2.C--
 -- (10,'2016-04-22',4550,2,'Reparacion del Lector',1,30654848512);
+
+-- Consultas --
+
+-- a. --
+
+SELECT COM.cuit, SUM(TRAN.monto) AS monto_total_facturado_2015
+FROM transaccion AS TRAN JOIN terminal AS TER ON (TRAN.codigo_terminal = TER.codigo)
+JOIN comercio AS COM ON (TER.cuit_comercio = COM.cuit)
+WHERE fecha BETWEEN '2015-01-01' AND '2015-12-31'
+GROUP BY COM.cuit
+HAVING SUM(monto) > 200000;
+
+-- b. --
+
+SELECT COUNT(*) AS cant_reparaciones, TEC.nombre AS tecnico
+FROM tecnico AS TEC JOIN reparacion AS R ON (TEC.cuit = R.cuit_tecnico) 
+GROUP BY TEC.cuit,TEC.nombre
+ORDER BY (TEC.nombre);
+
+-- c. --
+
+SELECT TEC.nombre
+FROM tecnico AS TEC JOIN banco AS B ON (tec.codigo_banco = b.codigo)
+WHERE TEC.nombre LIKE '%Juan%' AND B.nombre = 'Galicia';
+
+-- d. --
+
+SELECT razon_social, dom_calle AS domicilio_calle, dom_numero AS domicilio_numero, LOC.nombre AS localidad, PROV.nombre AS provincia
+FROM grande AS G JOIN comercio AS COM ON (G.cuit = COM.cuit)
+JOIN localidad AS LOC ON (COM.codigo_localidad = LOC.codigo)
+JOIN provincia AS PROV ON (LOC.codigo_provincia = PROV.codigo)
+WHERE G.cantidad_sucursales > 3
+ORDER BY PROV.nombre, LOC.nombre, COM.razon_social, COM.dom_calle, COM.dom_numero;
+
+-- e. --
+
+SELECT TER.codigo, TER.memoria, TER.año_importacion, TER.cuit_comercio, TER.codigo_sistema_operativo, TER.codigo_pais_origen
+FROM terminal AS TER JOIN reparacion AS REP ON (TER.codigo = REP.codigo_terminal)
+GROUP BY TER.codigo, TER.memoria, TER.año_importacion, TER.cuit_comercio, TER.codigo_sistema_operativo, TER.codigo_pais_origen
+HAVING COUNT(*) > 3;
+
+-- f. --
+
+SELECT TER.codigo, COM.razon_social
+FROM terminal AS TER JOIN comercio as COM ON (TER.cuit_comercio = COM.cuit)
+WHERE TER.codigo NOT IN(SELECT TRAN.codigo_terminal
+FROM transaccion AS TRAN);
+
+-- g. --
+
+SELECT TRAN.numero_transaccion, TRAN.fecha, TRAN.hora, TRAN.monto, COM.razon_social
+FROM transaccion AS TRAN JOIN terminal AS TER ON (TRAN.codigo_terminal = TER.codigo)
+JOIN comercio AS COM ON (TER.cuit_comercio = COM.cuit)
+WHERE fecha LIKE '2013-01%' AND 
+cantidad_cuotas BETWEEN 6 and 12;
+
+-- h. --
+
+SELECT COUNT(*) AS cantidad_terminales, TER.año_importacion
+FROM terminal AS TER
+GROUP BY TER.año_importacion;
+
+-- i. --
+
+SELECT TEC.*
+FROM reparacion AS REP JOIN tecnico AS TEC ON (REP.cuit_tecnico = TEC.cuit)
+WHERE REP.costo = (SELECT MAX(REP2.costo)
+FROM reparacion AS REP2);
+ 
+-- j. --
+
+SELECT TER.*
+FROM terminal AS TER 
+WHERE NOT EXISTS(SELECT 1
+FROM tecnico AS TEC
+WHERE NOT EXISTS(SELECT 1
+FROM reparacion AS REP
+WHERE REP.codigo_terminal = TER.codigo AND
+REP.cuit_tecnico = TEC.cuit));
+
+-- k. --
+
+SELECT TEC.nombre, TEC.sueldo, REP.costo
+FROM reparacion AS REP JOIN tecnico AS TEC ON (REP.cuit_tecnico = TEC.cuit)
+WHERE REP.costo = (SELECT MAX(REP2.costo)
+FROM reparacion AS REP2);
