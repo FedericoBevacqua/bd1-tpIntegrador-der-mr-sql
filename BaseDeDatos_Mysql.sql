@@ -306,3 +306,47 @@ SELECT TEC.nombre, TEC.sueldo, REP.costo
 FROM reparacion AS REP JOIN tecnico AS TEC ON (REP.cuit_tecnico = TEC.cuit)
 WHERE REP.costo = (SELECT MAX(REP2.costo)
 FROM reparacion AS REP2);
+
+
+-- Modificación de registros --
+
+SET SQL_SAFE_UPDATES = 0; -- Sentencia para que funcione SQL con Update y Delete --
+
+-- a. --
+
+UPDATE tecnico
+SET sueldo = round(sueldo * 0.1 + sueldo)
+WHERE fecha_ingreso >= '2015-01-01';
+
+-- TESTEO -- (Tienen que haber cambiado los sueldos en un 10%) --
+/*
+SELECT *
+FROM tecnico
+WHERE fecha_ingreso >= '2015-01-01';
+*/
+-- b. --
+
+UPDATE transaccion AS TRAN
+SET TRAN.numero_tarjeta = 9999999999999999
+WHERE TRAN.numero_tarjeta = 1234123412344321 AND 
+TRAN.fecha ='2015-12-24'
+AND EXISTS (SELECT 1
+FROM terminal AS TER JOIN comercio AS COM ON (TER.cuit_comercio = COM.cuit)
+WHERE COM.razon_social = 'Carrefour');
+
+-- TESTEO -- (La transaccion 2 tiene que haber cambiado su numero de tarjeta a 999...) --
+/*
+SELECT *
+FROM transaccion;
+*/
+-- c. --
+
+DELETE FROM tecnico
+WHERE cuit NOT IN(SELECT cuit_tecnico
+FROM reparacion AS R);
+
+-- TESTEO --  (No tiene que aparecer el tecnico Sergio Luna) --
+/*
+SELECT *
+FROM tecnico;
+/*
